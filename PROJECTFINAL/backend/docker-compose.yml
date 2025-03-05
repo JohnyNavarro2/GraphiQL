@@ -1,0 +1,190 @@
+version: '3.8'
+services:
+
+  ### Base de Datos (PostgreSQL) ###
+  postgres-db:
+    image: postgres:latest
+    container_name: postgres-db
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: admin1234
+      POSTGRES_DB: ProyectoFinal
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+
+  ### Eureka Server ###
+  eureka-server:
+    image: openjdk:17
+    container_name: eureka-server
+    restart: always
+    ports:
+      - "8761:8761"
+    volumes:
+      - .:/app
+    working_dir: /app/backend/eureka-server
+    command: ["java", "-jar", "target/eureka-server.jar"]
+
+  ### API Gateway ###
+  api-gateway:
+    image: openjdk:17
+    container_name: api-gateway
+    restart: always
+    depends_on:
+      - eureka-server
+    ports:
+      - "8080:8080"
+    environment:
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+    volumes:
+      - .:/app
+    working_dir: /app/backend/api-gateway
+    command: ["java", "-jar", "target/api-gateway.jar"]
+
+  ### Microservicios ###
+  servicio-requisicion:
+    image: openjdk:17
+    container_name: servicio-requisicion
+    restart: always
+    depends_on:
+      - postgres-db
+      - eureka-server
+      - kafka
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-db:5432/ProyectoFinal
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: admin1234
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+    working_dir: /app/backend/servicio-requisicion
+    command: ["java", "-jar", "target/servicio-requisicion.jar"]
+
+  servicio-publicacion:
+    image: openjdk:17
+    container_name: servicio-publicacion
+    restart: always
+    depends_on:
+      - postgres-db
+      - eureka-server
+      - kafka
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-db:5432/ProyectoFinal
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: admin1234
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+    ports:
+      - "8001:8001"
+    volumes:
+      - .:/app
+    working_dir: /app/backend/servicio-publicacion
+    command: ["java", "-jar", "target/servicio-publicacion.jar"]
+
+  servicio-candidatos:
+    image: openjdk:17
+    container_name: servicio-candidatos
+    restart: always
+    depends_on:
+      - postgres-db
+      - eureka-server
+      - kafka
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-db:5432/ProyectoFinal
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: admin1234
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+    ports:
+      - "8002:8002"
+    volumes:
+      - .:/app
+    working_dir: /app/backend/servicio-candidatos
+    command: ["java", "-jar", "target/servicio-candidatos.jar"]
+
+  servicio-evaluacion:
+    image: openjdk:17
+    container_name: servicio-evaluacion
+    restart: always
+    depends_on:
+      - postgres-db
+      - eureka-server
+      - kafka
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-db:5432/ProyectoFinal
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: admin1234
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+    ports:
+      - "8003:8003"
+    volumes:
+      - .:/app
+    working_dir: /app/backend/servicio-evaluacion
+    command: ["java", "-jar", "target/servicio-evaluacion.jar"]
+
+  servicio-entrevistas:
+    image: openjdk:17
+    container_name: servicio-entrevistas
+    restart: always
+    depends_on:
+      - postgres-db
+      - eureka-server
+      - kafka
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-db:5432/ProyectoFinal
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: admin1234
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+    ports:
+      - "8004:8004"
+    volumes:
+      - .:/app
+    working_dir: /app/backend/servicio-entrevistas
+    command: ["java", "-jar", "target/servicio-entrevistas.jar"]
+
+  servicio-seleccion:
+    image: openjdk:17
+    container_name: servicio-seleccion
+    restart: always
+    depends_on:
+      - postgres-db
+      - eureka-server
+      - kafka
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-db:5432/ProyectoFinal
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: admin1234
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+    ports:
+      - "8005:8005"
+    volumes:
+      - .:/app
+    working_dir: /app/backend/servicio-seleccion
+    command: ["java", "-jar", "target/servicio-seleccion.jar"]
+
+  ### Kafka & Zookeeper ###
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    container_name: zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+    ports:
+      - "2181:2181"
+
+  kafka:
+    image: confluentinc/cp-kafka:latest
+    container_name: kafka
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    ports:
+      - "9092:9092"
+
+volumes:
+  pg_data:

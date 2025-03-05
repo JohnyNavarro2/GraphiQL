@@ -1,0 +1,23 @@
+type Requisicion {
+  id: ID!
+  cargo: String!
+  categoriaSalarial: String!
+  perfil: String!
+  estado: String!
+}
+
+input RequisicionInput {  # <-- Definir el tipo de entrada para las mutaciones
+  cargo: String!
+  categoriaSalarial: String!
+  perfil: String!
+}
+
+type Query {
+  requisiciones: [Requisicion]
+}
+
+type Mutation {
+  crearRequisicion(input: RequisicionInput!): Requisicion  # <-- IMPORTANTE: crearRequisicion (NO createRequisicion)
+  actualizarEstadoRequisicion(id: ID!, estado: String!): Requisicion
+}
+
